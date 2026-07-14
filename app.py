@@ -4,8 +4,11 @@ from dashscope import Generation
 import os
 
 # ===================== 配置 =====================
-# API Key 从环境变量读取，也可以在侧边栏手动输入
-dashscope.api_key = os.getenv("DASHSCOPE_API_KEY", "")
+# 优先从 Streamlit Secrets 读取，其次环境变量
+try:
+    dashscope.api_key = st.secrets["DASHSCOPE_API_KEY"]
+except Exception:
+    dashscope.api_key = os.getenv("DASHSCOPE_API_KEY", "")
 
 # ===================== Prompt 模板 =====================
 
@@ -160,17 +163,20 @@ def main():
     st.title("🏠 房产 AI 内容助手")
     st.caption("输入房源信息，一键生成口播文案 / 视频标题 / 多平台文案 / 评论区话术")
 
-    # ---- 侧边栏：API Key 配置 ----
+    # ---- 侧边栏 ----
     with st.sidebar:
         st.header("⚙️ 设置")
-        api_key_input = st.text_input(
-            "通义千问 API Key",
-            value=dashscope.api_key,
-            type="password",
-            help="在 https://dashscope.console.aliyun.com/ 获取"
-        )
-        if api_key_input:
-            dashscope.api_key = api_key_input
+        # 如果后台已经配好 Key，不再让用户填
+        if not dashscope.api_key:
+            api_key_input = st.text_input(
+                "通义千问 API Key",
+                type="password",
+                help="在 https://dashscope.console.aliyun.com/ 获取"
+            )
+            if api_key_input:
+                dashscope.api_key = api_key_input
+        else:
+            st.success("✅ API 已就绪")
 
         st.divider()
         st.markdown("### 📖 使用说明")
